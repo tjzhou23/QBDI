@@ -1173,6 +1173,16 @@ GetWrittenAddress::generate(const Patch &patch,
 RelocatableInst::UniquePtrVec
 GetReadValue::generate(const Patch &patch, TempManager &temp_manager) const {
   Reg tmpRegister = temp_manager.getRegForTemp(temp);
+
+  if ((patch.llvmcpu->getOptions() & Options::OPT_DISABLE_MEMORYACCESS_VALUE) !=
+      0) {
+    if (index == 0) {
+      return conv_unique<RelocatableInst>(LoadImm::unique(tmpRegister, 0));
+    } else {
+      return {};
+    }
+  }
+
   Reg addrRegister = temp_manager.getRegForTemp(addr);
 
   bool isARM = (patch.llvmcpu->getCPUMode() == CPUMode::ARM);
@@ -1283,6 +1293,16 @@ GetReadValue::generate(const Patch &patch, TempManager &temp_manager) const {
 RelocatableInst::UniquePtrVec
 GetWrittenValue::generate(const Patch &patch, TempManager &temp_manager) const {
   Reg tmpRegister = temp_manager.getRegForTemp(temp);
+
+  if ((patch.llvmcpu->getOptions() & Options::OPT_DISABLE_MEMORYACCESS_VALUE) !=
+      0) {
+    if (index == 0) {
+      return conv_unique<RelocatableInst>(LoadImm::unique(tmpRegister, 0));
+    } else {
+      return {};
+    }
+  }
+
   Reg addrRegister = temp_manager.getRegForTemp(addr);
 
   bool isARM = (patch.llvmcpu->getCPUMode() == CPUMode::ARM);
@@ -1395,6 +1415,18 @@ BackupValueX2::generate(const Patch &patch, TempManager &temp_manager) const {
 
   Reg tmpRegister = temp_manager.getRegForTemp(temp);
   Reg tmp2Register = temp_manager.getRegForTemp(temp2);
+
+  if ((patch.llvmcpu->getOptions() & Options::OPT_DISABLE_MEMORYACCESS_VALUE) !=
+      0) {
+    // only set to zero for the first BackupValueX2
+    if (shadow.getTag() != shadow2.getTag()) {
+      return conv_unique<RelocatableInst>(LoadImm::unique(tmpRegister, 0),
+                                          LoadImm::unique(tmp2Register, 0));
+    } else {
+      return {};
+    }
+  }
+
   Reg addrRegister = temp_manager.getRegForTemp(addr);
 
   QBDI_REQUIRE_ABORT_PATCH(tmpRegister != tmp2Register, patch,

@@ -121,7 +121,7 @@ void analyseMemoryAccessAddrValue(const ExecBlock &curExecBlock,
                  expectValueTag, access.instAddress);
       return;
     }
-    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return );
+    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return);
   } while (shadows[index].tag != expectValueTag);
 
   access.value = curExecBlock.getShadow(shadows[index].shadowID);
@@ -187,7 +187,7 @@ void analyseMemoryAccessAddrRange(const ExecBlock &curExecBlock,
                  expectValueTag, access.instAddress);
       return;
     }
-    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return );
+    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return);
   } while (shadows[index].tag != expectValueTag);
 
   rword beginAddress = curExecBlock.getShadow(shadows[0].shadowID);

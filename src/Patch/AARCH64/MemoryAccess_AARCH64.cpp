@@ -1978,7 +1978,7 @@ void analyseMemoryAccessAddrValue(const ExecBlock &curExecBlock,
                  expectValueTag, access.instAddress);
       return;
     }
-    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return );
+    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return);
     // special case for MOPS instruction
     if (shadows[index].tag == MEM_MOPS_SIZE_TAG) {
       rword size = curExecBlock.getShadow(shadows[index].shadowID);
@@ -2017,9 +2017,9 @@ void analyseMemoryAccessAddrValue(const ExecBlock &curExecBlock,
   dest.push_back(access);
 
   for (; extendShadow > 0; --extendShadow, ++index) {
-    QBDI_REQUIRE_ACTION(index < shadows.size(), return );
-    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return );
-    QBDI_REQUIRE_ACTION(shadows[index].tag == MEM_VALUE_EXTENDED_TAG, return );
+    QBDI_REQUIRE_ACTION(index < shadows.size(), return);
+    QBDI_REQUIRE_ACTION(shadows[0].instID == shadows[index].instID, return);
+    QBDI_REQUIRE_ACTION(shadows[index].tag == MEM_VALUE_EXTENDED_TAG, return);
 
     access.accessAddress += sizeof(rword);
     access.value = curExecBlock.getShadow(shadows[index].shadowID);
@@ -2043,7 +2043,7 @@ void analyseMemoryAccess(const ExecBlock &curExecBlock, uint16_t instID,
   QBDI_DEBUG("Got {} shadows for Instruction {:x}", shadows.size(), instID);
 
   while (!shadows.empty()) {
-    QBDI_REQUIRE_ACTION(shadows[0].instID == instID, return );
+    QBDI_REQUIRE_ACTION(shadows[0].instID == instID, return);
 
     switch (shadows[0].tag) {
       default:
