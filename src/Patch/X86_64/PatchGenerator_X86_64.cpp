@@ -336,8 +336,7 @@ GetReadValue::generate(const Patch &patch, TempManager &temp_manager) const {
 
   RegLLVM dst = temp_manager.getRegForTemp(temp);
 
-  if ((patch.llvmcpu->getOptions() & Options::OPT_DISABLE_MEMORYACCESS_VALUE) !=
-      0) {
+  if (patch.llvmcpu->hasOptions(Options::OPT_DISABLE_MEMORYACCESS_VALUE)) {
     return conv_unique<RelocatableInst>(Xorrr(dst, dst));
   } else if (is_bits_64 and size < sizeof(rword)) {
     dst = temp_manager.getSizedSubReg(dst, 4);
@@ -402,8 +401,7 @@ GetWriteValue::generate(const Patch &patch, TempManager &temp_manager) const {
 
   RegLLVM dst = temp_manager.getRegForTemp(temp);
 
-  if ((patch.llvmcpu->getOptions() & Options::OPT_DISABLE_MEMORYACCESS_VALUE) !=
-      0) {
+  if (patch.llvmcpu->hasOptions(Options::OPT_DISABLE_MEMORYACCESS_VALUE)) {
     return conv_unique<RelocatableInst>(Xorrr(dst, dst));
   } else if (is_bits_64 and size < sizeof(rword)) {
     dst = temp_manager.getSizedSubReg(dst, 4);

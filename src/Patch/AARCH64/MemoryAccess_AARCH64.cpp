@@ -1637,6 +1637,12 @@ enum MemoryTag : uint16_t {
 
 const PatchGenerator::UniquePtrVec &
 generateReadInstrumentPatch(Patch &patch, const LLVMCPU &llvmcpu) {
+  if (llvmcpu.hasOptions(Options::OPT_DISABLE_MEMORYACCESS_VALUE)) {
+    static const PatchGenerator::UniquePtrVec r = conv_unique<PatchGenerator>(
+        GetReadAddress::unique(Temp(0)),
+        WriteTemp::unique(Temp(0), Shadow(MEM_READ_ADDRESS_TAG)));
+    return r;
+  }
   switch (getReadSize(patch.metadata.inst, llvmcpu)) {
     case 1:
     case 2:
@@ -1910,9 +1916,12 @@ generateMOPSWriteInstrumentPatch(Patch &patch, const LLVMCPU &llvmcpu) {
 
 std::vector<std::unique_ptr<InstrRule>> getInstrRuleMemAccessRead() {
   return conv_unique<InstrRule>(
-      InstrRuleDynamic::unique(
-          DoesReadAccess::unique(), generateReadInstrumentPatch, PREINST, false,
-          PRIORITY_MEMACCESS_LIMIT + 1, RelocTagPreInstMemAccess),
+      InstrRuleDynamic::unique(And::unique(conv_unique<PatchCondition>(
+                                   DoesReadAccess::unique(),
+                                   Not::unique(IsMOPSReadPrologue::unique()))),
+                               generateReadInstrumentPatch, PREINST, false,
+                               PRIORITY_MEMACCESS_LIMIT + 1,
+                               RelocTagPreInstMemAccess),
       InstrRuleDynamic::unique(IsMOPSReadPrologue::unique(),
                                generateMOPSReadInstrumentPatch, PREINST, false,
                                PRIORITY_MEMACCESS_LIMIT + 1,
@@ -1921,12 +1930,20 @@ std::vector<std::unique_ptr<InstrRule>> getInstrRuleMemAccessRead() {
 
 std::vector<std::unique_ptr<InstrRule>> getInstrRuleMemAccessWrite() {
   return conv_unique<InstrRule>(
+      InstrRuleDynamic::unique(And::unique(conv_unique<PatchCondition>(
+                                   DoesWriteAccess::unique(),
+                                   Not::unique(IsMOPSWritePrologue::unique()))),
+                               generatePreWriteInstrumentPatch, PREINST, false,
+                               PRIORITY_MEMACCESS_LIMIT,
+                               RelocTagPreInstMemAccess),
       InstrRuleDynamic::unique(
-          DoesWriteAccess::unique(), generatePreWriteInstrumentPatch, PREINST,
-          false, PRIORITY_MEMACCESS_LIMIT, RelocTagPreInstMemAccess),
-      InstrRuleDynamic::unique(
-          DoesWriteAccess::unique(), generatePostWriteInstrumentPatch, POSTINST,
-          false, PRIORITY_MEMACCESS_LIMIT, RelocTagPostInstMemAccess),
+          And::unique(conv_unique<PatchCondition>(
+              DoesWriteAccess::unique(),
+              Not::unique(IsMOPSWritePrologue::unique()),
+              Not::unique(HasOptions::unique(
+                  Options::OPT_DISABLE_MEMORYACCESS_VALUE)))),
+          generatePostWriteInstrumentPatch, POSTINST, false,
+          PRIORITY_MEMACCESS_LIMIT, RelocTagPostInstMemAccess),
       InstrRuleDynamic::unique(
           IsMOPSWritePrologue::unique(), generateMOPSWriteInstrumentPatch,
           PREINST, false, PRIORITY_MEMACCESS_LIMIT, RelocTagPreInstMemAccess));
@@ -1967,6 +1984,14 @@ void analyseMemoryAccessAddrValue(const ExecBlock &curExecBlock,
 
   access.accessAddress = curExecBlock.getShadow(shadows[0].shadowID);
   access.instAddress = curExecBlock.getInstAddress(shadows[0].instID);
+
+  if (llvmcpu.hasOptions(Options::OPT_DISABLE_MEMORYACCESS_VALUE) and
+      not isMOPSPrologue(inst)) {
+    access.flags |= MEMORY_UNKNOWN_VALUE;
+    access.value = 0;
+    dest.push_back(access);
+    return;
+  }
 
   size_t index = 0;
   // search the index of MEM_x_VALUE_TAG. For most instruction, it's the next
