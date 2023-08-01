@@ -74,7 +74,7 @@ void ExecBlock::run() {
                  getDataBlockBase());
 
     // Restore errno and Execute
-    if (llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
+    if (not llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
       errno = vminstance->getErrno();
       qbdi_runCodeBlock(codeBlock.base(), context->hostState.executeFlags);
       vminstance->setErrno(errno);
@@ -87,7 +87,7 @@ void ExecBlock::run() {
                  context->hostState.scratchRegisterValue);
   } else {
     // Restore errno and Execute
-    if (llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
+    if (not llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
       errno = vminstance->getErrno();
       qbdi_runCodeBlock(codeBlock.base(), context->hostState.executeFlags);
       vminstance->setErrno(errno);

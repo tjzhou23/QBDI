@@ -64,7 +64,7 @@ void ExecBlock::run() {
       makeRX();
     }
   }
-  if (llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
+  if (not llvmCPUs.hasOptions(Options::OPT_DISABLE_ERRNO_BACKUP)) {
     errno = vminstance->getErrno();
     qbdi_runCodeBlock(codeBlock.base(), context->hostState.executeFlags);
     vminstance->setErrno(errno);
